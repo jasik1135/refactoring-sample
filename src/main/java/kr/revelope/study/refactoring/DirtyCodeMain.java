@@ -5,8 +5,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
+import java.util.function.Supplier;
+import java.util.stream.IntStream;
 
 /**
  * csv 파일을 읽어서 특정 컬럼명을 group by 하여 출력하는 프로그램이다.
@@ -41,15 +42,10 @@ public class DirtyCodeMain {
 					}
 
 					columnCount = columns.length;
-					for (int i = 0; i < columnCount; i++) {
-						if (columns[i].equals(args[1])) {
-							targetColumnIndex = i;
-						}
-					}
-
-					if (targetColumnIndex < 0) {
-						throw new IllegalStateException("Can not found target column '" + args[1] + "'");
-					}
+					targetColumnIndex = IntStream.range(0, columnCount)
+							.filter(columnIndex -> args[1].equals(columns[columnIndex]))
+							.findFirst()
+							.orElseThrow(() -> new IllegalStateException("Can not found target column '" + args[1] + "'"));
 
 					isHeader = false;
 					continue;
