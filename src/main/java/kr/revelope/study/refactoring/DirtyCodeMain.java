@@ -1,13 +1,13 @@
 package kr.revelope.study.refactoring;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
-import java.util.function.Supplier;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 /**
  * csv 파일을 읽어서 특정 컬럼명을 group by 하여 출력하는 프로그램이다.
@@ -22,45 +22,41 @@ public class DirtyCodeMain {
 			throw new IllegalArgumentException("File name and target column name is required.");
 		}
 
-		InputStream is = DirtyCodeMain.class.getClassLoader().getResourceAsStream(args[0]);
-		if (is == null) {
+		int initialTargetColumnIndex = -1;
+		int intitialColumnCount = -1;
+		try (Stream<String> lines = Files.lines(Paths.get("src", "main", "resources", args[0]), StandardCharsets.UTF_8)) {
+			String[] columns = lines.limit(1)
+					.map(line -> line.split(","))
+					.findFirst()
+					.orElseThrow(() -> new IllegalArgumentException("First line must be columns. Column can not found."));
+
+			intitialColumnCount = columns.length;
+
+			initialTargetColumnIndex = IntStream.range(0, intitialColumnCount)
+					.filter(columnIndex -> args[1].equals(columns[columnIndex]))
+					.findFirst()
+					.orElseThrow(() -> new IllegalStateException("Can not found target column '" + args[1] + "'"));
+
+		} catch (IOException ex) {
 			throw new IllegalArgumentException("'" + args[0] + "' file can not found.");
 		}
 
+		final int targetColumnIndex = initialTargetColumnIndex;
+		final int columnCount = intitialColumnCount;
 		Map<String, Integer> result = new HashMap<>();
-		try (InputStreamReader streamReader = new InputStreamReader(is, StandardCharsets.UTF_8);
-			 BufferedReader reader = new BufferedReader(streamReader)) {
-			String line;
-			int columnCount = -1;
-			int targetColumnIndex = -1;
-			boolean isHeader = true;
-			while ((line = reader.readLine()) != null) {
-				if (isHeader) {
-					String[] columns = line.split(",");
-					if (columns.length == 0) {
-						throw new IllegalArgumentException("First line must be columns. Column can not found.");
+
+		try (Stream<String> lines = Files.lines(Paths.get("src", "main", "resources", args[0]), StandardCharsets.UTF_8)) {
+			lines.skip(1)
+				.map(line -> line.split(","))
+				.forEach(columns -> {
+					if (columns.length != columnCount) {
+						System.out.println("Column count is not matched. must be " + columnCount + ", but " + columns.length);
+					} else {
+						result.put(columns[targetColumnIndex], result.get(columns[targetColumnIndex]) != null ? result.get(columns[targetColumnIndex]) + 1 : 1);
 					}
-
-					columnCount = columns.length;
-					targetColumnIndex = IntStream.range(0, columnCount)
-							.filter(columnIndex -> args[1].equals(columns[columnIndex]))
-							.findFirst()
-							.orElseThrow(() -> new IllegalStateException("Can not found target column '" + args[1] + "'"));
-
-					isHeader = false;
-					continue;
-				}
-
-				String[] columns = line.split(",");
-				if (columns.length != columnCount) {
-					System.out.println("Column count is not matched. must be " + columnCount + ", but " + columns.length);
-					continue;
-				}
-
-				result.put(columns[targetColumnIndex], result.get(columns[targetColumnIndex]) != null ? result.get(columns[targetColumnIndex]) + 1 : 1);
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
+				});
+		} catch (IOException ex) {
+			throw new IllegalArgumentException("'" + args[0] + "' file can not found.");
 		}
 
 		for (Map.Entry<String, Integer> entry : result.entrySet()) {
