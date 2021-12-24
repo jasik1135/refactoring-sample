@@ -50,7 +50,7 @@ public class DirtyCodeMain {
 				.map(line -> line.split(","))
 				.filter(dataArray -> dataArray.length == columnCount)
 				.map(dataArray -> dataArray[targetColumnIndex])
-				.forEach(data -> result.put(data, result.getOrDefault(data, 1)));
+				.forEach(data -> result.put(data, result.getOrDefault(data, 0) + 1));
 		} catch (IOException ex) {
 			throw new IllegalArgumentException("'" + args[0] + "' file can not found.");
 		}
