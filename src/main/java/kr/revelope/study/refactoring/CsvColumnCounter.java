@@ -6,13 +6,10 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public class CsvColumnCounter {
-    private int targetColumnIndex;
-    private int columnCount;
+    private final int targetColumnIndex;
+    private final int columnCount;
 
-    public CsvColumnCounter() {
-    }
-
-    public boolean setFields(Stream<String> lines, String columnName) {
+    public CsvColumnCounter(Stream<String> lines, String columnName) {
         String[] columns = lines.limit(1)
                 .map(line -> line.split(","))
                 .findFirst()
@@ -24,8 +21,6 @@ public class CsvColumnCounter {
                 .filter(columnIndex -> columnName.equals(columns[columnIndex]))
                 .findFirst()
                 .orElseThrow(() -> new IllegalStateException("Can not found target column '" + columnName + "'"));
-
-        return true;
     }
 
     public Map<String, Integer> getResult(Stream<String> lines) {

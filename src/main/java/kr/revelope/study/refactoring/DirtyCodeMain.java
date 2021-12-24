@@ -23,15 +23,15 @@ public class DirtyCodeMain {
             throw new IllegalArgumentException("File name and target column name is required.");
         }
 
-        CsvColumnCounter columnCounter = new CsvColumnCounter();
-
-        processFile(args[0], lines -> columnCounter.setFields(lines, args[1]));
+        CsvColumnCounter columnCounter = processFile(args[0], lines ->
+            new CsvColumnCounter(lines, args[1])
+        );
 
         Map<String, Integer> result = processFile(args[0], columnCounter::getResult);
 
-        for (Map.Entry<String, Integer> entry : result.entrySet()) {
-            System.out.println(entry.getKey() + " : " + entry.getValue());
-        }
+        result.forEach((key, value) ->
+            System.out.println(key + " : " + value)
+        );
     }
 
     private static <T> T processFile(String fileName, Function<Stream<String>, T> function) {
