@@ -22,8 +22,8 @@ public class DirtyCodeMain {
 			throw new IllegalArgumentException("File name and target column name is required.");
 		}
 
-		int initialTargetColumnIndex = -1;
-		int intitialColumnCount = -1;
+		int initialTargetColumnIndex;
+		int intitialColumnCount;
 		try (Stream<String> lines = Files.lines(Paths.get("src", "main", "resources", args[0]), StandardCharsets.UTF_8)) {
 			String[] columns = lines.limit(1)
 					.map(line -> line.split(","))
@@ -48,13 +48,9 @@ public class DirtyCodeMain {
 		try (Stream<String> lines = Files.lines(Paths.get("src", "main", "resources", args[0]), StandardCharsets.UTF_8)) {
 			lines.skip(1)
 				.map(line -> line.split(","))
-				.forEach(columns -> {
-					if (columns.length != columnCount) {
-						System.out.println("Column count is not matched. must be " + columnCount + ", but " + columns.length);
-					} else {
-						result.put(columns[targetColumnIndex], result.get(columns[targetColumnIndex]) != null ? result.get(columns[targetColumnIndex]) + 1 : 1);
-					}
-				});
+				.filter(dataArray -> dataArray.length == columnCount)
+				.map(dataArray -> dataArray[targetColumnIndex])
+				.forEach(data -> result.put(data, result.getOrDefault(data, 1)));
 		} catch (IOException ex) {
 			throw new IllegalArgumentException("'" + args[0] + "' file can not found.");
 		}
