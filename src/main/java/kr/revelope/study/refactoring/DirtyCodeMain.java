@@ -23,16 +23,16 @@ public class DirtyCodeMain {
 		}
 
 		int initialTargetColumnIndex;
-		int intitialColumnCount;
+		int initialColumnCount;
 		try (Stream<String> lines = Files.lines(Paths.get("src", "main", "resources", args[0]), StandardCharsets.UTF_8)) {
 			String[] columns = lines.limit(1)
 					.map(line -> line.split(","))
 					.findFirst()
 					.orElseThrow(() -> new IllegalArgumentException("First line must be columns. Column can not found."));
 
-			intitialColumnCount = columns.length;
+			initialColumnCount = columns.length;
 
-			initialTargetColumnIndex = IntStream.range(0, intitialColumnCount)
+			initialTargetColumnIndex = IntStream.range(0, initialColumnCount)
 					.filter(columnIndex -> args[1].equals(columns[columnIndex]))
 					.findFirst()
 					.orElseThrow(() -> new IllegalStateException("Can not found target column '" + args[1] + "'"));
@@ -42,7 +42,7 @@ public class DirtyCodeMain {
 		}
 
 		final int targetColumnIndex = initialTargetColumnIndex;
-		final int columnCount = intitialColumnCount;
+		final int columnCount = initialColumnCount;
 		Map<String, Integer> result = new HashMap<>();
 
 		try (Stream<String> lines = Files.lines(Paths.get("src", "main", "resources", args[0]), StandardCharsets.UTF_8)) {
