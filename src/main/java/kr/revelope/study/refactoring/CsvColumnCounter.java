@@ -1,7 +1,8 @@
 package kr.revelope.study.refactoring;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -24,14 +25,10 @@ public class CsvColumnCounter {
     }
 
     public Map<String, Integer> getResult(Stream<String> lines) {
-        Map<String, Integer> result = new HashMap<>();
-
-        lines.skip(1)
+        return lines.skip(1)
                 .map(line -> line.split(","))
                 .filter(dataArray -> dataArray.length == columnCount)
                 .map(dataArray -> dataArray[targetColumnIndex])
-                .forEach(data -> result.put(data, result.getOrDefault(data, 0) + 1));
-
-        return result;
+                .collect(Collectors.groupingBy(Function.identity(), Collectors.summingInt(value -> 1)));
     }
 }
