@@ -1,5 +1,7 @@
 package kr.revelope.study.refactoring;
 
+import org.apache.commons.cli.*;
+
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -19,15 +21,16 @@ public class DirtyCodeMain {
     private static final String BASE_PATH = "src/main/resources/";
 
     public static void main(String[] args) {
-        if (args == null || args.length < 2) {
-            throw new IllegalArgumentException("File name and target column name is required.");
-        }
+        ArgumentParser argumentParser = new ArgumentParser(args);
 
-        CsvColumnCounter columnCounter = processFile(args[0], lines ->
-            new CsvColumnCounter(lines, args[1])
+        final String fileName = argumentParser.getOptionValue("f");
+        final String columnName = argumentParser.getOptionValue("c");
+
+        CsvColumnCounter columnCounter = processFile(fileName, lines ->
+            new CsvColumnCounter(lines, columnName)
         );
 
-        Map<String, Integer> result = processFile(args[0], columnCounter::getResult);
+        Map<String, Integer> result = processFile(fileName, columnCounter::getResult);
 
         result.forEach((key, value) ->
             System.out.println(key + " : " + value)
