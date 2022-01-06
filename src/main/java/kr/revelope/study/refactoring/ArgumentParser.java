@@ -41,7 +41,7 @@ public class ArgumentParser {
     public String getOptionValue(String option) {
         String optionValue = commandLine.getOptionValue(option);
         if (optionValue == null) {
-            throw new IllegalArgumentException(String.format("Option '%s' does not exist"));
+            throw new IllegalArgumentException(String.format("Option '%s' does not exist", option));
         }
 
         return optionValue;
