@@ -27,15 +27,15 @@ public class ArgumentParser {
             options.addOption(option);
         }
 
-        commandLine = parseArgument(args);
+        try {
+            commandLine = parseArgument(args);
+        } catch (ParseException exception) {
+            throw new IllegalArgumentException("Arguments do not match options.");
+        }
     }
 
-    private CommandLine parseArgument(String[] args) {
-        try {
-            return DEFAULT_PARSER.parse(options, args);
-        } catch (ParseException exception) {
-            throw new IllegalArgumentException("File name and target column name arguments are not valid.");
-        }
+    private CommandLine parseArgument(String[] args) throws ParseException {
+        return DEFAULT_PARSER.parse(options, args);
     }
 
     public String getOptionValue(String option) {
