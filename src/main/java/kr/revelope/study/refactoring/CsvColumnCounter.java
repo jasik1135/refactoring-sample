@@ -1,34 +1,46 @@
 package kr.revelope.study.refactoring;
 
-import java.util.Map;
-import java.util.function.Function;
+import kr.revelope.study.refactoring.argument.ColumnOption;
+import org.apache.commons.lang3.ObjectUtils;
+
+import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public class CsvColumnCounter {
-    private final int targetColumnIndex;
+    private final Map<Integer, Integer> targetColumnIndexToValue;
     private final int columnCount;
 
-    public CsvColumnCounter(Stream<String> lines, String columnName) {
-        String[] columns = lines.limit(1)
+    public CsvColumnCounter(Stream<String> lines, List<ColumnOption> columnOptionList) {
+        List<String> columnList = lines.limit(1)
                 .map(line -> line.split(","))
+                .map(Arrays::asList)
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("First line must be columns. Column can not found."));
 
-        this.columnCount = columns.length;
+        this.columnCount = columnList.size();
 
-        this.targetColumnIndex = IntStream.range(0, this.columnCount)
-                .filter(columnIndex -> columnName.equals(columns[columnIndex]))
-                .findFirst()
-                .orElseThrow(() -> new IllegalStateException("Can not found target column '" + columnName + "'"));
+        this.targetColumnIndexToValue = columnOptionList.stream()
+                .collect(HashMap::new,
+                        (map, columnOption) -> map.put(columnList.indexOf(columnOption.getColumn()), columnOption.getValue()),
+                        HashMap::putAll);
+
+        if (this.targetColumnIndexToValue.size() == 0) {
+            throw new IllegalStateException(String.format("Can not find target columns '%s'", columnOptionList));
+        }
     }
 
-    public Map<String, Integer> getResult(Stream<String> lines) {
+    public Map<List<String>, Integer> getResult(Stream<String> lines) {
         return lines.skip(1)
                 .map(line -> line.split(","))
-                .filter(dataArray -> dataArray.length == columnCount)
-                .map(dataArray -> dataArray[targetColumnIndex])
-                .collect(Collectors.groupingBy(Function.identity(), Collectors.summingInt(value -> 1)));
+                .filter(dataArray -> dataArray.length == this.columnCount)
+                .filter(dateArray -> targetColumnIndexToValue.entrySet().stream()
+                        .filter(entry -> ObjectUtils.isNotEmpty(entry.getValue()))
+                        .map(entry -> Integer.parseInt(dateArray[entry.getKey()]) > entry.getValue())
+                        .reduce(true, (result, current) -> result && current))
+                .map(dataArray -> targetColumnIndexToValue.keySet().stream()
+                        .map(targetIndex -> dataArray[targetIndex])
+                        .collect(Collectors.toList()))
+                .collect(Collectors.groupingBy(dataList -> dataList, Collectors.summingInt(value -> 1)));
     }
 }
